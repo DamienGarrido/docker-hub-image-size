@@ -8,6 +8,7 @@ os="${2:-linux}"
 arch="${3:-amd64}"
 page_size="${4:-200}"
 
+[[ "${image}" == "${tag}" ]] && tag='latest'
 page_num=1
 while
 	response="$( curl -s "${docker_hub_endpoint}/${image}/tags/?page_size=${page_size}&page=${page_num}" )"
