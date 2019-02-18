@@ -1,0 +1,29 @@
+#!/bin/bash
+
+docker_hub_endpoint='https://hub.docker.com/v2/repositories'
+
+image="${1%%:*}"
+tag="${1##*:}"
+os="${2:-linux}"
+arch="${3:-amd64}"
+page_size="${4:-200}"
+
+page_num=1
+while
+	response="$( curl -s "${docker_hub_endpoint}/${image}/tags/?page_size=${page_size}&page=${page_num}" )"
+	[[ "$( echo "${response}" | jq -r '.detail' )" == 'Not found' ]] \
+		&& echo "ERROR: Tag not found: ${tag}" >&2 && exit
+	[[ ! "$( echo "${response}" | jq -r '.count' )" =~ ^[0-9]+$ ]] \
+		&& echo "ERROR: Image not found: ${image}" >&2 && exit
+	[[ -z "$( echo "${response}" \
+		| jq -r ".results[] | select(.name==\"${tag}\") | .name" )" ]]
+do
+	page_num=$(( page_num + 1 ))
+done
+
+images="$( echo "${response}" | jq ".results[] | select(.name==\"${tag}\") | .images" )"
+os_images="$( echo "${images}" | jq "[ .[] | select(.os==\"${os}\") ]" )"
+[[ "$( echo "${os_images}" | jq 'length' )" -eq 0 ]] && echo "ERROR: OS not found: ${os}" >&2 && exit
+arch_images="$( echo "${os_images}" | jq "[ .[] | select(.architecture==\"${arch}\") ]" )"
+[[ "$( echo "${arch_images}" | jq 'length' )" -eq 0 ]] && echo "ERROR: Architecture not found: ${arch}" >&2 && exit
+echo "${arch_images}" | jq -r '[ .[].size ] | add'
