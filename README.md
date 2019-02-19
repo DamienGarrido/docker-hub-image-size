@@ -1,5 +1,5 @@
 # docker-hub-image-size
-Retrieve image size from Docker Hub
+Retrieve image size from Docker Hub using `jq` and `curl`.
 
 ## Usage
 ```bash
