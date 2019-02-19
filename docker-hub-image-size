@@ -2,11 +2,27 @@
 
 docker_hub_endpoint='https://hub.docker.com/v2/repositories'
 
+function usage {
+	cat <<EOT
+Usage: ${0##*/} <image>[:tag] [os] [arch] [page_size]
+
+Examples:
+	${0##*/} ubuntu
+
+	${0##*/} maven linux arm64
+
+	${0##*/} portainer/portainer:latest linux amd64 200
+
+EOT
+}
+
+[[ $# -lt 1 ]] && usage && exit
+
 image="${1%%:*}"
 tag="${1##*:}"
 os="${2:-linux}"
 arch="${3:-amd64}"
-page_size="${4:-200}"
+page_size="${4:-100}"
 
 [[ "${image}" == "${tag}" ]] && tag='latest'
 page_num=1
